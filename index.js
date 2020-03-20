@@ -13,8 +13,9 @@ app.get("/api/getruntime",async function(req,res){
     var playlistId = url.split("=")[1];
     var response = await axios.get(url);
     var data = response.data;
-    var title = $($("h1 a",data).toArray()[0]).text();
+    var title = $($(".pl-header-title",data).toArray()[0]).text().trim();
     var img = $("td img[data-thumb]",data).toArray()[0].attribs["data-thumb"];
+    var by = $($(".pl-header-details",data).toArray()[0].children[0]).text();
     var videoIds = []
     response = await axios.get(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&playlistId=${playlistId}&key=${apis[0]}`);
     var totalResults = response.data["pageInfo"]["totalResults"]
@@ -80,7 +81,7 @@ app.get("/api/getruntime",async function(req,res){
             }
     }
     var time = convertTime(timeArray)
-    var toSend = {title: title,img: img,time:time,totalResults:totalResults}
+    var toSend = {title: title,img: img,time:time,totalResults:totalResults,by:by}
     res.send(toSend);
 }
 catch(err){
