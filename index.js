@@ -24,7 +24,56 @@ app.get("/api/getruntime",async function(req,res){
             break;
         }
     }
-    res.send(videoIds);
+    var timeArray = [];
+    if(videoIds.length < 50){
+        var ids = ""
+        ids+=videoIds[0];
+        for(var i = 1;i<videoIds.length;i++){
+            ids+="%2C"+videoIds[i];
+        }
+        response = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ids}&maxResults=50&key=${apis[0]}`)
+        var items = response.data["items"];
+                items.forEach(element=>{
+                    timeArray.push(element["contentDetails"]["duration"])
+                });
+    }
+    else{
+        try{
+        var current = 0;
+        var rounds = Math.floor(videoIds.length/49);
+        var remaining = videoIds.length%49;
+        for(var i = 0;i<rounds;i++){
+            var ids = "";
+                ids+=videoIds[current];
+                current++;
+                for(var j = 0;j<49;j++){
+                    ids+="%2C"+videoIds[current];
+                    current++;
+                }
+                response = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ids}&maxResults=50&key=${apis[0]}`);
+                var items = response.data["items"];
+                items.forEach(element=>{
+                    timeArray.push(element["contentDetails"]["duration"])
+                });
+            }
+            var ids = "";
+            for(var i = 0;i<remaining;i++){
+                ids+=videoIds[current]+"%2C";
+                current++;
+            }
+            response = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ids}&maxResults=50&key=${apis[0]}`);
+                var items = response.data["items"];
+                items.forEach(element=>{
+                    timeArray.push(element["contentDetails"]["duration"])
+                });
+        
+            }
+            catch(err){
+                console.log(err)
+            }
+    }
+    
+    res.send(timeArray);
 })
 
 app.listen(process.env.PORT||4000,function(){console.log("listening");})
